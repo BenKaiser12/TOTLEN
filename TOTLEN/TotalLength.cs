@@ -31,8 +31,11 @@ namespace TOTLEN
             {
                 SelectionSet acSelSet = acSelprompt.Value;
 
-                SumEntityLength_Polyline();
+                double totalLengthPoly = SumEntityLength_Polyline(acSelSet);
+                double totalLengthLine = SumEntityLength_Line(acSelSet);
+                double totalLengthArc = SumEntityLength_Arc(acSelSet);
 
+                double TotalLength = totalLengthLine + totalLengthArc + totalLengthPoly;
             }
             else
             {
@@ -43,18 +46,16 @@ namespace TOTLEN
                 {
                     SelectionSet acSelSet = acSelprompt.Value;
 
-                    SumEntityLength_Polyline();
+                    double totalLengthPoly = SumEntityLength_Polyline(acSelSet);
+                    double totalLengthLine = SumEntityLength_Line(acSelSet);
+                    double totalLengthArc = SumEntityLength_Arc(acSelSet);
+
+                    double TotalLength = totalLengthLine + totalLengthArc + totalLengthPoly;
                 }
             }
-
-
-            //Sum all valid object types
-            double totalLengthAll = totalPolyLength + totalLineLength + totalArcLength;
-
-
         }
 
-        private void SumEntityLength_Polyline()
+        private double SumEntityLength_Polyline(SelectionSet acSelSet)
         {
             //get Document and Databse
             Document acDoc = Application.DocumentManager.MdiActiveDocument;
@@ -86,11 +87,14 @@ namespace TOTLEN
                 {
                     ed.WriteMessage("Sorry, there was an error.");
                 }
+
+                return totalPolyLength;
+
             }
 
         }
 
-        private void SumEntityLength_Line()
+        private double SumEntityLength_Line(SelectionSet acSelSet)
         {
             //get Document and Databse
             Document acDoc = Application.DocumentManager.MdiActiveDocument;
@@ -121,11 +125,14 @@ namespace TOTLEN
                 {
                     ed.WriteMessage("Sorry, there was an error.");
                 }
+
+                return totalLineLength;
+
             }
 
         }
 
-        private void SumEntityLength_Arc()
+        private double SumEntityLength_Arc(SelectionSet acSelSet)
         {
             //get Document and Databse
             Document acDoc = Application.DocumentManager.MdiActiveDocument;
@@ -156,6 +163,9 @@ namespace TOTLEN
                 {
                     ed.WriteMessage("Sorry, there was an error.");
                 }
+
+                return totalArcLength;
+
             }
 
         }
