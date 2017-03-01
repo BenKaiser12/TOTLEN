@@ -36,6 +36,11 @@ namespace TOTLEN
                 double totalLengthArc = SumEntityLength_Arc(acSelSet);
 
                 double TotalLength = totalLengthLine + totalLengthArc + totalLengthPoly;
+
+                string sTotalLength = TotalLength.ToString();
+                String.Format("{0:0.00}", sTotalLength);
+                ed.WriteMessage("Total Length = {0}", sTotalLength);
+
             }
             else
             {
@@ -51,8 +56,14 @@ namespace TOTLEN
                     double totalLengthArc = SumEntityLength_Arc(acSelSet);
 
                     double TotalLength = totalLengthLine + totalLengthArc + totalLengthPoly;
+
+                    string sTotalLength = TotalLength.ToString();
+                    String.Format("{0:0.00}", sTotalLength);
+                    ed.WriteMessage("Total Length = {0}", sTotalLength);
                 }
             }
+
+            
         }
 
         private double SumEntityLength_Polyline(SelectionSet acSelSet)
