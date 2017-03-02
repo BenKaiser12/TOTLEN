@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Autodesk.AutoCAD;
 using Autodesk.AutoCAD.Runtime;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
@@ -24,36 +25,38 @@ namespace TOTLEN
             //define editor variable
             Editor ed = acDoc.Editor;
 
-            PromptSelectionResult acSelprompt;
-            acSelprompt = ed.SelectImplied();
+            //Get Selection Set
+            PromptSelectionResult acSelPrompt;
+            acSelPrompt = ed.GetSelection();
 
-            if (acSelprompt.Status == PromptStatus.OK)
+            //Check if Pickfirst set was valid
+            try
             {
-                SelectionSet acSelSet = acSelprompt.Value;
-
-                double totalLengthPoly = SumEntityLength_Polyline(acSelSet);
-                double totalLengthLine = SumEntityLength_Line(acSelSet);
-                double totalLengthArc = SumEntityLength_Arc(acSelSet);
-
-                double TotalLength = totalLengthLine + totalLengthArc + totalLengthPoly;
-
-                string sTotalLength = TotalLength.ToString();
-                String.Format("{0:0.00}", sTotalLength);
-                ed.WriteMessage("Total Length = {0}", sTotalLength);
-
-            }
-            else
-            {
-                //Request For Selection
-                PromptSelectionResult acSelPrompt = acDoc.Editor.GetSelection();
-
-                if (acSelprompt.Status == PromptStatus.OK)
+                if (acSelPrompt.Status == PromptStatus.OK)
                 {
-                    SelectionSet acSelSet = acSelprompt.Value;
+                    //If it was valid, run the Sum methods below
+                    SelectionSet acSelSet = acSelPrompt.Value;
 
-                    double totalLengthPoly = SumEntityLength_Polyline(acSelSet);
-                    double totalLengthLine = SumEntityLength_Line(acSelSet);
-                    double totalLengthArc = SumEntityLength_Arc(acSelSet);
+                    double totalLengthPoly,
+                        totalLengthLine,
+                        totalLengthArc;
+
+                    //Get the type of the selected object and convert it to a string
+                    string sObjType = acSelSet.GetType().ToString();
+
+                    //Check the object type, perform sum for given type
+                    if (sObjType == "Polyline")
+                    {
+                        totalLengthPoly = SumEntityLength_Polyline(acSelSet);
+                    }
+                    else if (sObjType == "Line")
+                    {
+                        totalLengthLine = SumEntityLength_Line(acSelSet);
+                    }
+                    else if (sObjType == "Arc")
+                    {
+                        totalLengthArc = SumEntityLength_Arc(acSelSet);
+                    }
 
                     double TotalLength = totalLengthLine + totalLengthArc + totalLengthPoly;
 
@@ -61,8 +64,16 @@ namespace TOTLEN
                     String.Format("{0:0.00}", sTotalLength);
                     ed.WriteMessage("Total Length = {0}", sTotalLength);
                 }
+                else
+                {
+                    ed.WriteMessage("Sorry, There was an error.");
+                }
             }
-
+            catch
+            {
+                ed.WriteMessage("I didn't do what I was supposed to");
+            }
+        
             
         }
 
@@ -92,6 +103,7 @@ namespace TOTLEN
                             totalPolyLength += (acEnt as Polyline).Length;
                             
                         }
+                        
                     }
                 }
                 catch
