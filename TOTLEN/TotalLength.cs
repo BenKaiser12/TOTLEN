@@ -15,7 +15,7 @@ namespace TOTLEN
 {
     public class TotalLength
     {
-        [CommandMethod("TOTLEN")]
+        [CommandMethod("TOTLEN", CommandFlags.UsePickSet)]
         public void TotalLengthOfSelected()
         {
             //Variables...
@@ -33,16 +33,26 @@ namespace TOTLEN
             Editor ed = acDoc.Editor;
 
             //Get Selection Set
-            PromptSelectionResult acSelPrompt;
-            acSelPrompt = ed.GetSelection();
+            PromptSelectionResult acSelRes = ed.SelectImplied();            
 
             //Check if Selection is Valid
             try
             {
-                if (acSelPrompt.Status == PromptStatus.OK)
+                if (acSelRes.Status == PromptStatus.Error)
                 {
-                    SelectionSet acSelSet = acSelPrompt.Value;
-                    
+                    PromptSelectionOptions acSelOpt = new PromptSelectionOptions();
+                    acSelOpt.MessageForAdding = "\nPlease Make a Selection of Line, Arcs, and/or Polylines";
+                    acSelRes = ed.GetSelection(acSelOpt);
+                }
+                else
+                {
+                    ed.SetImpliedSelection(new ObjectId[0]);
+                }
+
+                if (acSelRes.Status == PromptStatus.OK)
+                {
+                    SelectionSet acSelSet = acSelRes.Value;
+
                     //If it was valid, run the Sum methods below
                     using (Transaction acTrans = acDb.TransactionManager.StartTransaction())
                     {
@@ -59,24 +69,24 @@ namespace TOTLEN
                                     Type acSelObjType = acEnt.GetType();
 
                                     if (acSelObjType == typeof(Polyline))
-                                    {                                     
+                                    {
                                         totalPolyLength += (acEnt as Polyline).Length;
-                                        ed.WriteMessage("\nSelected Polyline");
-                                        //ed.WriteMessage("Selected Polyline. Total Length = {0}", totalPolyLength);
+                                        //ed.WriteMessage("\nSelected Polyline");
+                                        
                                     }
                                     else if (acSelObjType == typeof(Line))
                                     {
                                         totalLineLength += (acEnt as Line).Length;
-                                        ed.WriteMessage("\nSelected Line");
+                                        //ed.WriteMessage("\nSelected Line");
                                     }
                                     else if (acSelObjType == typeof(Arc))
                                     {
                                         totalArcLength += (acEnt as Arc).Length;
-                                        ed.WriteMessage("\nSelected Arc");
+                                        //ed.WriteMessage("\nSelected Arc");
                                     }
-                                    else 
+                                    else
                                     {
-                                        noValidLength = "blah";                                        
+                                        noValidLength = "blah";
                                     }
                                 }
 
@@ -87,30 +97,23 @@ namespace TOTLEN
                             ed.WriteMessage("\nHe's Dead, Jim");
                         }
                     }
+                }
+                if (noValidLength != "blah")
+                {
+                    totalAllLength = totalPolyLength + totalLineLength + totalArcLength;
 
-                    if(noValidLength != "blah")
-                    {
-                        totalAllLength = totalPolyLength + totalLineLength + totalArcLength;
 
-                        string sTotalLength = totalAllLength.ToString();
-                        String.Format("{0:0.00}", sTotalLength);
-                        ed.WriteMessage("\nTotal Length = {0}", sTotalLength);
-                    }
-                    else
-                    {
-                        ed.WriteMessage("\nI am not an accepted onject.  Sorry, you lose. :(");
-                    }
+                    ed.WriteMessage("\nTotal Length = {0}", totalAllLength.ToString("F2"));
 
-                    
                 }
                 else
                 {
-                    ed.WriteMessage("\nSorry, There was an error.");
+                    ed.WriteMessage("\nSorry, I am not an accepted onject.");
                 }
             }
             catch
             {
-                ed.WriteMessage("I didn't do what I was supposed to");
+                ed.WriteMessage("\nI didn't do what I was supposed to");
             }     
         }        
     }
