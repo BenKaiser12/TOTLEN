@@ -18,6 +18,13 @@ namespace TOTLEN
         [CommandMethod("TOTLEN")]
         public void TotalLengthOfSelected()
         {
+            //Variables...
+            string noValidLength = "";
+            double totalPolyLength = 0,
+                totalLineLength = 0,
+                totalArcLength = 0,
+                totalAllLength = 0;
+
             //get Document and Databse
             Document acDoc = Application.DocumentManager.MdiActiveDocument;
             Database acDb = acDoc.Database;
@@ -28,13 +35,6 @@ namespace TOTLEN
             //Get Selection Set
             PromptSelectionResult acSelPrompt;
             acSelPrompt = ed.GetSelection();
-
-            //Variables...
-           double totalPolyLength = 0,
-                totalLineLength = 0,
-                totalArcLength = 0,
-                totalAllLength = 0;
-
 
             //Check if Selection is Valid
             try
@@ -51,46 +51,61 @@ namespace TOTLEN
                             //Step through Objects in Selection
                             foreach (SelectedObject acSelObj in acSelSet)
                             {
-                                Type acSelObjType = acSelObj.GetType();
-                                
-                                //If there is a valid object, check its type and depending
-                                //on that, add it's length to the current total
-                                if (acSelObjType == typeof(Polyline))
+
+                                //If there is a valid object, 
+                                if (acSelObj != null)
                                 {
                                     Entity acEnt = acTrans.GetObject(acSelObj.ObjectId, OpenMode.ForRead) as Entity;
-                                    totalPolyLength += (acEnt as Polyline).Length;
-                                    ed.WriteMessage("Selected Polyline");
+                                    Type acSelObjType = acEnt.GetType();
+
+                                    if (acSelObjType == typeof(Polyline))
+                                    {                                     
+                                        totalPolyLength += (acEnt as Polyline).Length;
+                                        ed.WriteMessage("\nSelected Polyline");
+                                        //ed.WriteMessage("Selected Polyline. Total Length = {0}", totalPolyLength);
+                                    }
+                                    else if (acSelObjType == typeof(Line))
+                                    {
+                                        totalLineLength += (acEnt as Line).Length;
+                                        ed.WriteMessage("\nSelected Line");
+                                    }
+                                    else if (acSelObjType == typeof(Arc))
+                                    {
+                                        totalArcLength += (acEnt as Arc).Length;
+                                        ed.WriteMessage("\nSelected Arc");
+                                    }
+                                    else 
+                                    {
+                                        noValidLength = "blah";                                        
+                                    }
                                 }
-                                else if (acSelObjType == typeof(Line))
-                                {
-                                    Entity acEnt = acTrans.GetObject(acSelObj.ObjectId, OpenMode.ForRead) as Entity;
-                                    totalLineLength += (acEnt as Line).Length;
-                                    ed.WriteMessage("Selected Line");
-                                }
-                                else if (acSelObjType == typeof(Arc))
-                                {
-                                    Entity acEnt = acTrans.GetObject(acSelObj.ObjectId, OpenMode.ForRead) as Entity;
-                                    totalArcLength += (acEnt as Arc).Length;
-                                    ed.WriteMessage("Selected Arc");
-                                }
+
                             }
                         }
                         catch
                         {
-                            ed.WriteMessage("Sorry, there was an error.");
+                            ed.WriteMessage("\nHe's Dead, Jim");
                         }
-
-                        totalAllLength = totalArcLength + totalLineLength + totalPolyLength;                    
-
                     }
+
+                    if(noValidLength != "blah")
+                    {
+                        totalAllLength = totalPolyLength + totalLineLength + totalArcLength;
+
+                        string sTotalLength = totalAllLength.ToString();
+                        String.Format("{0:0.00}", sTotalLength);
+                        ed.WriteMessage("\nTotal Length = {0}", sTotalLength);
+                    }
+                    else
+                    {
+                        ed.WriteMessage("\nI am not an accepted onject.  Sorry, you lose. :(");
+                    }
+
                     
-                    string sTotalLength = totalAllLength.ToString();
-                    String.Format("{0:0.00}", sTotalLength);
-                    ed.WriteMessage("Total Length = {0}", sTotalLength);
                 }
                 else
                 {
-                    ed.WriteMessage("Sorry, There was an error.");
+                    ed.WriteMessage("\nSorry, There was an error.");
                 }
             }
             catch
